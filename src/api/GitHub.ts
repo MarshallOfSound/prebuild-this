@@ -22,9 +22,10 @@ const getAllRepos = async (github: GitHubApi) => {
   const repos: Repository[] = [];
 
   let resp: RepoResponse = await github.repos.getAll({ per_page: 100 });
+  repos.push(...resp.data);
   while (github.hasNextPage(resp)) {
-    repos.push(...resp.data);
     resp = await github.getNextPage(resp);
+    repos.push(...resp.data);
   }
   return repos;
 };

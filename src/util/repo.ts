@@ -17,13 +17,15 @@ export const getRepo = async () => {
     throw 'You aren\'t in the root of a git repository';
   }
 
-  if (!await fs.pathExists(path.resolve(process.cwd(), 'package.json'))) {
+  const packageJSONPath = path.resolve(process.cwd(), 'package.json');
+
+  if (!await fs.pathExists(packageJSONPath)) {
     throw 'You aren\'t in the root of a npm package';
   }
 
-  const alLRemotes: GitRemote[] = pify(simpleGit.getRemotes)(true);
+  const allRemotes: GitRemote[] = await pify(simpleGit.getRemotes.bind(simpleGit))(true);
 
-  const remotes = alLRemotes.filter(remote => !!remote.name);
+  const remotes = allRemotes.filter(remote => !!remote.name);
 
   if (remotes.length === 0) {
     throw 'This git repository has no remotes';
@@ -57,6 +59,10 @@ export const getRepo = async () => {
 
   const repoOwner = repoIdent[1];
   const repoName = repoIdent[2];
+
+  const packageJson = await fs.readJson(packageJSONPath);
+  packageJson.repository = `https://www.github.com/${repoOwner}/${repoName}`;
+  await fs.writeJson(packageJSONPath, packageJson);
 
   return { repoName, repoOwner };
 };

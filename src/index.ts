@@ -3,10 +3,11 @@
 import { AxiosInstance } from 'axios';
 import * as inquirer from 'inquirer';
 
-import { getValidAppVeyorInstance } from './api/AppVeyor';
+import { getValidAppVeyorInstance, setupAppVeyor } from './api/AppVeyor';
 import { getValidGitHubInstance } from './api/GitHub';
-import { getValidTravisInstance } from './api/TravisCI';
+import { getValidTravisInstance, setupTravisCI } from './api/TravisCI';
 import { getRepo } from './util/repo';
+import { install } from './util/deps';
 
 export const main = async () => {
   const repo = await getRepo();
@@ -28,8 +29,8 @@ export const main = async () => {
 
   const operatingSystems: string[] = answers.operatingSystems;
 
-  let appVeyorInstance: AxiosInstance;
-  let travisInstance: AxiosInstance;
+  let appVeyorInstance: AxiosInstance | null = null;
+  let travisInstance: AxiosInstance | null = null;
 
   if (operatingSystems.includes('Windows')) {
     appVeyorInstance = await getValidAppVeyorInstance();
@@ -37,6 +38,16 @@ export const main = async () => {
 
   if (operatingSystems.includes('macOS') || operatingSystems.includes('Linux')) {
     travisInstance = await getValidTravisInstance(github);
+  }
+
+  await install();
+
+  if (appVeyorInstance) {
+    await setupAppVeyor(github, appVeyorInstance, repo);
+  }
+
+  if (travisInstance) {
+    await setupTravisCI(github, travisInstance, repo, operatingSystems.includes('Linux'), operatingSystems.includes('macOS'));
   }
 };
 
