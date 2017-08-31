@@ -30,6 +30,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "prepublish": "npm run build",
     "lint": "tslint src/**/*.ts",
     "watch": "nodemon --exec \"npm run build\" --watch src -e ts"
   }
